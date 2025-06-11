@@ -1,12 +1,1984 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="es">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+    <title>Helionix - Tabla Periódica Interactiva</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #10B981;
+            --secondary-green: #059669;
+            --light-green: #D1FAE5;
+            --accent-green: #065F46;
+            --white: #FFFFFF;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-600: #4B5563;
+            --gray-800: #1F2937;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+            color: var(--gray-800);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .header .subtitle {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--primary-green);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+        }
+
+        .btn:hover {
+            background: var(--primary-green);
+            color: var(--white);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn.active {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+        }
+
+        .scanner-container {
+            display: none;
+            text-align: center;
+        }
+
+        .scanner-container.active {
+            display: block;
+        }
+
+        .scanner-header {
+            margin-bottom: 20px;
+        }
+
+        .scanner-header h3 {
+            color: var(--primary-green);
+            margin-bottom: 8px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .scanner-header p {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            border-radius: 8px;
+            margin: 0 auto 20px auto;
+            display: block;
+            border: 2px solid var(--gray-200);
+            background: var(--gray-100);
+        }
+
+        .scanner-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .qr-generator {
+            background: var(--light-green);
+            border: 1px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .qr-generator h4 {
+            color: var(--accent-green);
+            margin-bottom: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .qr-codes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .qr-code-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .qr-code-item canvas {
+            margin-bottom: 8px;
+        }
+
+        .qr-code-item .label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .element-info {
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .element-info.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .element-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+            gap: 32px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .element-symbol {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            line-height: 1;
+        }
+
+        .element-basic {
+            flex: 1;
+        }
+
+        .element-name {
+            font-size: 2.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .element-number {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        .ai-prediction {
+            background: linear-gradient(135deg, var(--light-green), var(--gray-50));
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid var(--primary-green);
+            border-opacity: 0.2;
+        }
+
+        .ai-prediction .label {
+            font-weight: 600;
+            color: var(--accent-green);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-prediction .content {
+            font-size: 1.125rem;
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+
+        .element-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .detail-item {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-value {
+            font-size: 1.125rem;
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+
+        .info-adicional {
+            background: var(--gray-50);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-green);
+            margin-bottom: 24px;
+        }
+
+        .info-adicional .label {
+            font-weight: 600;
+            color: var(--accent-green);
+            margin-bottom: 8px;
+        }
+
+        .audio-controls {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .manual-input {
+            display: none;
+        }
+
+        .manual-input.active {
+            display: block;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--gray-800);
+            width: 200px;
+            text-align: center;
+            font-size: 16px;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+        }
+
+        .input-group input::placeholder {
+            color: var(--gray-600);
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: var(--light-green);
+            color: var(--accent-green);
+            border: 1px solid var(--primary-green);
+            display: block;
+        }
+
+        .status.error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #F87171;
+            display: block;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            gap: 4px;
+            margin-top: 24px;
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 20px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .element-cell {
+            aspect-ratio: 1;
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 50px;
+            font-size: 0.875rem;
+        }
+
+        .element-cell:hover {
+            background: var(--light-green);
+            border-color: var(--primary-green);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .element-cell .symbol {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: var(--gray-800);
+        }
+
+        .element-cell .number {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+            
+            .element-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .element-symbol {
+                font-size: 4rem;
+            }
+            
+            .element-details {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Helionix</h1>
+            <p class="subtitle">Plataforma avanzada de análisis químico con inteligencia artificial para el estudio interactivo de elementos</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="scanBtn">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M12 12h4.01M12 12v4.01"></path>
+                </svg>
+                Escanear QR
+            </button>
+            <button class="btn" id="manualBtn">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Búsqueda Manual
+            </button>
+            <button class="btn" id="periodicBtn">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Tabla Periódica
+            </button>
+        </div>
+
+        <div class="scanner-container card" id="scannerContainer">
+            <div class="scanner-header">
+                <h3>Escáner QR Avanzado</h3>
+                <p>Apunte la cámara hacia un código QR de elemento químico</p>
+            </div>
+            
+            <div class="scanner-controls">
+                <button class="btn" id="startScanBtn">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Iniciar Cámara
+                </button>
+                <button class="btn" id="stopScanBtn" style="display: none;">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+                    </svg>
+                    Detener
+                </button>
+            </div>
+            
+            <video id="video"></video>
+            <div class="status" id="scanStatus">Presione "Iniciar Cámara" para comenzar</div>
+            
+            <div class="qr-generator">
+                <h4>Códigos QR de Ejemplo</h4>
+                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px;">
+                    Escanee estos códigos QR para probar la funcionalidad:
+                </p>
+                <div class="qr-codes-grid" id="qrCodesGrid"></div>
+            </div>
+        </div>
+
+        <div class="manual-input card" id="manualInput">
+            <div class="input-group">
+                <input type="number" id="elementNumber" placeholder="Número atómico (1-118)" min="1" max="118">
+                <button class="btn" id="searchBtn">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Analizar
+                </button>
+            </div>
+            <div class="status" id="manualStatus"></div>
+        </div>
+
+        <div class="periodic-table" id="periodicTable" style="display: none;"></div>
+
+        <div class="element-info card" id="elementInfo">
+            <div class="element-header">
+                <div class="element-symbol" id="elementSymbol"></div>
+                <div class="element-basic">
+                    <div class="element-name" id="elementName"></div>
+                    <div class="element-number" id="elementAtomicNumber"></div>
+                </div>
+            </div>
+
+            <div class="ai-prediction">
+                <div class="label">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    Análisis IA - Clasificación Predictiva
+                </div>
+                <div class="content" id="aiCategory"></div>
+            </div>
+
+            <div class="element-details">
+                <div class="detail-item">
+                    <div class="detail-label">Masa Atómica</div>
+                    <div class="detail-value" id="elementMass"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Electronegatividad</div>
+                    <div class="detail-value" id="elementElectronegativity"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Clasificación</div>
+                    <div class="detail-value" id="elementCategory"></div>
+                </div>
+            </div>
+
+            <div class="info-adicional">
+                <div class="label">Información Técnica</div>
+                <div id="elementAdditionalInfo"></div>
+            </div>
+
+            <div class="audio-controls">
+                <button class="btn" id="playAudioBtn">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M9 12a3 3 0 106 0v5a3 3 0 11-6 0v-5z"></path>
+                    </svg>
+                    Síntesis de Voz
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos de elementos
+        const elementos = {
+    "1": {
+        "nombre": "Hidrógeno",
+        "simbolo": "H",
+        "numero_atomico": 1,
+        "masa_atomica": 1.008,
+        "electronegatividad": 2.2,
+        "categoria": "No metal",
+        "info_adicional": "Elemento más abundante del universo"
+    },
+    "2": {
+        "nombre": "Helio",
+        "simbolo": "He",
+        "numero_atomico": 2,
+        "masa_atomica": 4.0026,
+        "electronegatividad": 0.0,
+        "categoria": "Gas noble",
+        "info_adicional": "Gas para refrigeración"
+    },
+    "3": {
+        "nombre": "Litio",
+        "simbolo": "Li",
+        "numero_atomico": 3,
+        "masa_atomica": 6.94,
+        "electronegatividad": 0.98,
+        "categoria": "Metal alcalino",
+        "info_adicional": "Usado en baterías recargables"
+    },
+    "4": {
+        "nombre": "Berilio",
+        "simbolo": "Be",
+        "numero_atomico": 4,
+        "masa_atomica": 9.0122,
+        "electronegatividad": 1.57,
+        "categoria": "Metal alcalinotérreo",
+        "info_adicional": "Utilizado en materiales aeroespaciales"
+    },
+    "5": {
+        "nombre": "Boro",
+        "simbolo": "B",
+        "numero_atomico": 5,
+        "masa_atomica": 10.81,
+        "electronegatividad": 2.04,
+        "categoria": "Metaloide",
+        "info_adicional": "Componente clave en vidrios resistentes"
+    },
+    "6": {
+        "nombre": "Carbono",
+        "simbolo": "C",
+        "numero_atomico": 6,
+        "masa_atomica": 12.011,
+        "electronegatividad": 2.55,
+        "categoria": "No metal",
+        "info_adicional": "Base de la química orgánica"
+    },
+    "7": {
+        "nombre": "Nitrógeno",
+        "simbolo": "N",
+        "numero_atomico": 7,
+        "masa_atomica": 14.007,
+        "electronegatividad": 3.04,
+        "categoria": "No metal",
+        "info_adicional": "Componente principal del aire terrestre"
+    },
+    "8": {
+        "nombre": "Oxígeno",
+        "simbolo": "O",
+        "numero_atomico": 8,
+        "masa_atomica": 15.999,
+        "electronegatividad": 3.44,
+        "categoria": "No metal",
+        "info_adicional": "Esencial para la respiración celular"
+    },
+    "9": {
+        "nombre": "Flúor",
+        "simbolo": "F",
+        "numero_atomico": 9,
+        "masa_atomica": 18.998,
+        "electronegatividad": 3.98,
+        "categoria": "Halógeno",
+        "info_adicional": "Elemento más reactivo de la tabla periódica"
+    },
+    "10": {
+        "nombre": "Neón",
+        "simbolo": "Ne",
+        "numero_atomico": 10,
+        "masa_atomica": 20.180,
+        "electronegatividad": 0.0,
+        "categoria": "Gas noble",
+        "info_adicional": "Emite luz colorida en lámparas de neón"
+    },
+    "11": {
+        "nombre": "Sodio",
+        "simbolo": "Na",
+        "numero_atomico": 11,
+        "masa_atomica": 22.990,
+        "electronegatividad": 0.93,
+        "categoria": "Metal alcalino",
+        "info_adicional": "Componente principal de la sal de mesa"
+    },
+    "12": {
+        "nombre": "Magnesio",
+        "simbolo": "Mg",
+        "numero_atomico": 12,
+        "masa_atomica": 24.305,
+        "electronegatividad": 1.31,
+        "categoria": "Metal alcalinotérreo",
+        "info_adicional": "Esencial para la fotosíntesis"
+    },
+    "13": {
+        "nombre": "Aluminio",
+        "simbolo": "Al",
+        "numero_atomico": 13,
+        "masa_atomica": 26.982,
+        "electronegatividad": 1.61,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Metal ligero usado en aleaciones"
+    },
+    "14": {
+        "nombre": "Silicio",
+        "simbolo": "Si",
+        "numero_atomico": 14,
+        "masa_atomica": 28.085,
+        "electronegatividad": 1.90,
+        "categoria": "Metaloide",
+        "info_adicional": "Fundamental en circuitos integrados"
+    },
+    "15": {
+        "nombre": "Fósforo",
+        "simbolo": "P",
+        "numero_atomico": 15,
+        "masa_atomica": 30.974,
+        "electronegatividad": 2.19,
+        "categoria": "No metal",
+        "info_adicional": "Componente clave en fertilizantes"
+    },
+    "16": {
+        "nombre": "Azufre",
+        "simbolo": "S",
+        "numero_atomico": 16,
+        "masa_atomica": 32.06,
+        "electronegatividad": 2.58,
+        "categoria": "No metal",
+        "info_adicional": "Olor característico en huevos podridos"
+    },
+    "17": {
+        "nombre": "Cloro",
+        "simbolo": "Cl",
+        "numero_atomico": 17,
+        "masa_atomica": 35.45,
+        "electronegatividad": 3.16,
+        "categoria": "Halógeno",
+        "info_adicional": "Usado en desinfección de aguas"
+    },
+    "18": {
+        "nombre": "Argón",
+        "simbolo": "Ar",
+        "numero_atomico": 18,
+        "masa_atomica": 39.948,
+        "electronegatividad": 0.0,
+        "categoria": "Gas noble",
+        "info_adicional": "Gas inerte usado en iluminación"
+    },
+    "19": {
+        "nombre": "Potasio",
+        "simbolo": "K",
+        "numero_atomico": 19,
+        "masa_atomica": 39.098,
+        "electronegatividad": 0.82,
+        "categoria": "Metal alcalino",
+        "info_adicional": "Esencial para la función nerviosa y muscular"
+    },
+    "20": {
+        "nombre": "Calcio",
+        "simbolo": "Ca",
+        "numero_atomico": 20,
+        "masa_atomica": 40.078,
+        "electronegatividad": 1.00,
+        "categoria": "Metal alcalinotérreo",
+        "info_adicional": "Componente clave de huesos y conchas"
+    },
+    "21": {
+        "nombre": "Escandio",
+        "simbolo": "Sc",
+        "numero_atomico": 21,
+        "masa_atomica": 44.956,
+        "electronegatividad": 1.36,
+        "categoria": "Metal de transición",
+        "info_adicional": "Usado en luces de alta intensidad"
+    },
+    "22": {
+        "nombre": "Titanio",
+        "simbolo": "Ti",
+        "numero_atomico": 22,
+        "masa_atomica": 47.867,
+        "electronegatividad": 1.54,
+        "categoria": "Metal de transición",
+        "info_adicional": "Resistente a la corrosión, usado en implantes médicos"
+    },
+    "23": {
+        "nombre": "Vanadio",
+        "simbolo": "V",
+        "numero_atomico": 23,
+        "masa_atomica": 50.942,
+        "electronegatividad": 1.63,
+        "categoria": "Metal de transición",
+        "info_adicional": "Mejora la resistencia del acero"
+    },
+    "24": {
+        "nombre": "Cromo",
+        "simbolo": "Cr",
+        "numero_atomico": 24,
+        "masa_atomica": 51.996,
+        "electronegatividad": 1.66,
+        "categoria": "Metal de transición",
+        "info_adicional": "Usado en acabados anticorrosivos (cromado)"
+    },
+    "25": {
+        "nombre": "Manganeso",
+        "simbolo": "Mn",
+        "numero_atomico": 25,
+        "masa_atomica": 54.938,
+        "electronegatividad": 1.55,
+        "categoria": "Metal de transición",
+        "info_adicional": "Importante en la producción de acero"
+    },
+    "26": {
+        "nombre": "Hierro",
+        "simbolo": "Fe",
+        "numero_atomico": 26,
+        "masa_atomica": 55.845,
+        "electronegatividad": 1.83,
+        "categoria": "Metal de transición",
+        "info_adicional": "Núcleo de la Tierra y componente de la hemoglobina"
+    },
+    "27": {
+        "nombre": "Cobalto",
+        "simbolo": "Co",
+        "numero_atomico": 27,
+        "masa_atomica": 58.933,
+        "electronegatividad": 1.88,
+        "categoria": "Metal de transición",
+        "info_adicional": "Usado en imanes y pigmentos azules"
+    },
+    "28": {
+        "nombre": "Níquel",
+        "simbolo": "Ni",
+        "numero_atomico": 28,
+        "masa_atomica": 58.693,
+        "electronegatividad": 1.91,
+        "categoria": "Metal de transición",
+        "info_adicional": "Resistente a la oxidación, usado en monedas"
+    },
+    "29": {
+        "nombre": "Cobre",
+        "simbolo": "Cu",
+        "numero_atomico": 29,
+        "masa_atomica": 63.546,
+        "electronegatividad": 1.90,
+        "categoria": "Metal de transición",
+        "info_adicional": "Conductor eléctrico usado desde la antigüedad"
+    },
+    "30": {
+        "nombre": "Zinc",
+        "simbolo": "Zn",
+        "numero_atomico": 30,
+        "masa_atomica": 65.38,
+        "electronegatividad": 1.65,
+        "categoria": "Metal de transición",
+        "info_adicional": "Protector contra la corrosión (galvanizado)"
+    },
+    "31": {
+        "nombre": "Galio",
+        "simbolo": "Ga",
+        "numero_atomico": 31,
+        "masa_atomica": 69.723,
+        "electronegatividad": 1.81,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Se derrite en la mano (punto de fusión: 29.76°C)"
+    },
+    "32": {
+        "nombre": "Germanio",
+        "simbolo": "Ge",
+        "numero_atomico": 32,
+        "masa_atomica": 72.630,
+        "electronegatividad": 2.01,
+        "categoria": "Metaloide",
+        "info_adicional": "Usado en fibras ópticas y semiconductores"
+    },
+    "33": {
+        "nombre": "Arsénico",
+        "simbolo": "As",
+        "numero_atomico": 33,
+        "masa_atomica": 74.922,
+        "electronegatividad": 2.18,
+        "categoria": "Metaloide",
+        "info_adicional": "Tóxico, usado históricamente como veneno"
+    },
+    "34": {
+        "nombre": "Selenio",
+        "simbolo": "Se",
+        "numero_atomico": 34,
+        "masa_atomica": 78.971,
+        "electronegatividad": 2.55,
+        "categoria": "No metal",
+        "info_adicional": "Esencial en enzimas antioxidantes"
+    },
+    "35": {
+        "nombre": "Bromo",
+        "simbolo": "Br",
+        "numero_atomico": 35,
+        "masa_atomica": 79.904,
+        "electronegatividad": 2.96,
+        "categoria": "Halógeno",
+        "info_adicional": "Único halógeno líquido a temperatura ambiente"
+    },
+    "36": {
+        "nombre": "Kriptón",
+        "simbolo": "Kr",
+        "numero_atomico": 36,
+        "masa_atomica": 83.798,
+        "electronegatividad": 3.00,
+        "categoria": "Gas noble",
+        "info_adicional": "Usado en lámparas fluorescentes"
+    },
+    "37": {
+        "nombre": "Rubidio",
+        "simbolo": "Rb",
+        "numero_atomico": 37,
+        "masa_atomica": 85.468,
+        "electronegatividad": 0.82,
+        "categoria": "Metal alcalino",
+        "info_adicional": "Usado en relojes atómicos"
+    },
+    "38": {
+        "nombre": "Estroncio",
+        "simbolo": "Sr",
+        "numero_atomico": 38,
+        "masa_atomica": 87.62,
+        "electronegatividad": 0.95,
+        "categoria": "Metal alcalinotérreo",
+        "info_adicional": "Da color rojo en fuegos artificiales"
+    },
+    "39": {
+        "nombre": "Itrio",
+        "simbolo": "Y",
+        "numero_atomico": 39,
+        "masa_atomica": 88.906,
+        "electronegatividad": 1.22,
+        "categoria": "Metal de transición",
+        "info_adicional": "Componente de superconductores"
+    },
+    "40": {
+        "nombre": "Circonio",
+        "simbolo": "Zr",
+        "numero_atomico": 40,
+        "masa_atomica": 91.224,
+        "electronegatividad": 1.33,
+        "categoria": "Metal de transición",
+        "info_adicional": "Usado en reactores nucleares"
+    },
+    "41": {
+        "nombre": "Niobio",
+        "simbolo": "Nb",
+        "numero_atomico": 41,
+        "masa_atomica": 92.906,
+        "electronegatividad": 1.6,
+        "categoria": "Metal de transición",
+        "info_adicional": "Mejora la resistencia del acero inoxidable"
+    },
+    "42": {
+        "nombre": "Molibdeno",
+        "simbolo": "Mo",
+        "numero_atomico": 42,
+        "masa_atomica": 95.95,
+        "electronegatividad": 2.16,
+        "categoria": "Metal de transición",
+        "info_adicional": "Esencial en enzimas para fijar nitrógeno"
+    },
+    "43": {
+        "nombre": "Tecnecio",
+        "simbolo": "Tc",
+        "numero_atomico": 43,
+        "masa_atomica": 98,
+        "electronegatividad": 1.9,
+        "categoria": "Metal de transición",
+        "info_adicional": "Primer elemento artificialmente producido"
+    },
+    "44": {
+        "nombre": "Rutenio",
+        "simbolo": "Ru",
+        "numero_atomico": 44,
+        "masa_atomica": 101.07,
+        "electronegatividad": 2.2,
+        "categoria": "Metal de transición",
+        "info_adicional": "Usado en aleaciones de platino"
+    },
+    "45": {
+        "nombre": "Rodio",
+        "simbolo": "Rh",
+        "numero_atomico": 45,
+        "masa_atomica": 102.91,
+        "electronegatividad": 2.28,
+        "categoria": "Metal de transición",
+        "info_adicional": "Catalizador en convertidores catalíticos"
+    },
+    "46": {
+        "nombre": "Paladio",
+        "simbolo": "Pd",
+        "numero_atomico": 46,
+        "masa_atomica": 106.42,
+        "electronegatividad": 2.20,
+        "categoria": "Metal de transición",
+        "info_adicional": "Almacena hidrógeno en celdas de combustible"
+    },
+    "47": {
+        "nombre": "Plata",
+        "simbolo": "Ag",
+        "numero_atomico": 47,
+        "masa_atomica": 107.87,
+        "electronegatividad": 1.93,
+        "categoria": "Metal de transición",
+        "info_adicional": "Mejor conductor térmico y eléctrico"
+    },
+    "48": {
+        "nombre": "Cadmio",
+        "simbolo": "Cd",
+        "numero_atomico": 48,
+        "masa_atomica": 112.41,
+        "electronegatividad": 1.69,
+        "categoria": "Metal de transición",
+        "info_adicional": "Tóxico, usado en baterías recargables"
+    },
+    "49": {
+        "nombre": "Indio",
+        "simbolo": "In",
+        "numero_atomico": 49,
+        "masa_atomica": 114.82,
+        "electronegatividad": 1.78,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Componente de pantallas táctiles"
+    },
+    "50": {
+        "nombre": "Estaño",
+        "simbolo": "Sn",
+        "numero_atomico": 50,
+        "masa_atomica": 118.71,
+        "electronegatividad": 1.96,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Usado en soldaduras desde la antigüedad"
+    },
+    "51": {
+        "nombre": "Antimonio",
+        "simbolo": "Sb",
+        "numero_atomico": 51,
+        "masa_atomica": 121.76,
+        "electronegatividad": 2.05,
+        "categoria": "Metaloide",
+        "info_adicional": "Usado en retardantes de llama"
+    },
+    "52": {
+        "nombre": "Telurio",
+        "simbolo": "Te",
+        "numero_atomico": 52,
+        "masa_atomica": 127.60,
+        "electronegatividad": 2.1,
+        "categoria": "Metaloide",
+        "info_adicional": "Componente de paneles solares"
+    },
+    "53": {
+        "nombre": "Yodo",
+        "simbolo": "I",
+        "numero_atomico": 53,
+        "masa_atomica": 126.90,
+        "electronegatividad": 2.66,
+        "categoria": "Halógeno",
+        "info_adicional": "Esencial para la función tiroidea"
+    },
+    "54": {
+        "nombre": "Xenón",
+        "simbolo": "Xe",
+        "numero_atomico": 54,
+        "masa_atomica": 131.29,
+        "electronegatividad": 2.6,
+        "categoria": "Gas noble",
+        "info_adicional": "Usado en lámparas de flash y anestesia"
+    },
+    "55": {
+        "nombre": "Cesio",
+        "simbolo": "Cs",
+        "numero_atomico": 55,
+        "masa_atomica": 132.91,
+        "electronegatividad": 0.79,
+        "categoria": "Metal alcalino",
+        "info_adicional": "Relojes atómicos de alta precisión"
+    },
+    "56": {
+        "nombre": "Bario",
+        "simbolo": "Ba",
+        "numero_atomico": 56,
+        "masa_atomica": 137.33,
+        "electronegatividad": 0.89,
+        "categoria": "Metal alcalinotérreo",
+        "info_adicional": "Usado en contrastes para radiografías"
+    },
+    "57": {
+        "nombre": "Lantano",
+        "simbolo": "La",
+        "numero_atomico": 57,
+        "masa_atomica": 138.91,
+        "electronegatividad": 1.10,
+        "categoria": "Lantánido",
+        "info_adicional": "Usado en lentes de cámaras y catalizadores"
+ 
+   },
+    "58": {
+        "nombre": "Cerio",
+        "simbolo": "Ce",
+        "numero_atomico": 58,
+        "masa_atomica": 140.12,
+        "electronegatividad": 1.12,
+        "categoria": "Lantánido",
+        "info_adicional": "Componente clave en piedras de mecheros"
+    },
+    "59": {
+        "nombre": "Praseodimio",
+        "simbolo": "Pr",
+        "numero_atomico": 59,
+        "masa_atomica": 140.91,
+        "electronegatividad": 1.13,
+        "categoria": "Lantánido",
+        "info_adicional": "Da color amarillo a vidrios y esmaltes"
+    },
+    "60": {
+        "nombre": "Neodimio",
+        "simbolo": "Nd",
+        "numero_atomico": 60,
+        "masa_atomica": 144.24,
+        "electronegatividad": 1.14,
+        "categoria": "Lantánido",
+        "info_adicional": "Usado en imanes permanentes potentes"
+    },
+    "61": {
+        "nombre": "Prometio",
+        "simbolo": "Pm",
+        "numero_atomico": 61,
+        "masa_atomica": 145,
+        "electronegatividad": 1.13,
+        "categoria": "Lantánido",
+        "info_adicional": "Elemento radiactivo artificial"
+    },
+    "62": {
+        "nombre": "Samario",
+        "simbolo": "Sm",
+        "numero_atomico": 62,
+        "masa_atomica": 150.36,
+        "electronegatividad": 1.17,
+        "categoria": "Lantánido",
+        "info_adicional": "Usado en reactores nucleares"
+    },
+    "63": {
+        "nombre": "Europio",
+        "simbolo": "Eu",
+        "numero_atomico": 63,
+        "masa_atomica": 151.96,
+        "electronegatividad": 1.20,
+        "categoria": "Lantánido",
+        "info_adicional": "Fósforo rojo en pantallas CRT"
+    },
+    "64": {
+        "nombre": "Gadolinio",
+        "simbolo": "Gd",
+        "numero_atomico": 64,
+        "masa_atomica": 157.25,
+        "electronegatividad": 1.20,
+        "categoria": "Lantánido",
+        "info_adicional": "Usado en resonancias magnéticas (MRI)"
+    },
+    "65": {
+        "nombre": "Terbio",
+        "simbolo": "Tb",
+        "numero_atomico": 65,
+        "masa_atomica": 158.93,
+        "electronegatividad": 1.22,
+        "categoria": "Lantánido",
+        "info_adicional": "Fósforo verde en lámparas"
+    },
+    "66": {
+        "nombre": "Disprosio",
+        "simbolo": "Dy",
+        "numero_atomico": 66,
+        "masa_atomica": 162.50,
+        "electronegatividad": 1.23,
+        "categoria": "Lantánido",
+        "info_adicional": "Aleaciones para motores eléctricos"
+    },
+    "67": {
+        "nombre": "Holmio",
+        "simbolo": "Ho",
+        "numero_atomico": 67,
+        "masa_atomica": 164.93,
+        "electronegatividad": 1.24,
+        "categoria": "Lantánido",
+        "info_adicional": "Usado en láseres médicos"
+    },
+    "68": {
+        "nombre": "Erbio",
+        "simbolo": "Er",
+        "numero_atomico": 68,
+        "masa_atomica": 167.26,
+        "electronegatividad": 1.24,
+        "categoria": "Lantánido",
+        "info_adicional": "Amplificación de señales en fibra óptica"
+    },
+    "69": {
+        "nombre": "Tulio",
+        "simbolo": "Tm",
+        "numero_atomico": 69,
+        "masa_atomica": 168.93,
+        "electronegatividad": 1.25,
+        "categoria": "Lantánido",
+        "info_adicional": "Fuente portátil de rayos X"
+    },
+    "70": {
+        "nombre": "Iterbio",
+        "simbolo": "Yb",
+        "numero_atomico": 70,
+        "masa_atomica": 173.05,
+        "electronegatividad": 1.10,
+        "categoria": "Lantánido",
+        "info_adicional": "Relojes atómicos de alta precisión"
+    },
+    "71": {
+        "nombre": "Lutecio",
+        "simbolo": "Lu",
+        "numero_atomico": 71,
+        "masa_atomica": 174.97,
+        "electronegatividad": 1.27,
+        "categoria": "Lantánido",
+        "info_adicional": "Catalizador en refinerías"
+    },
+    "72": {
+        "nombre": "Hafnio",
+        "simbolo": "Hf",
+        "numero_atomico": 72,
+        "masa_atomica": 178.49,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Usado en reactores nucleares"
+    },
+    "73": {
+        "nombre": "Tantalio",
+        "simbolo": "Ta",
+        "numero_atomico": 73,
+        "masa_atomica": 180.95,
+        "electronegatividad": 1.50,
+        "categoria": "Metal de transición",
+        "info_adicional": "Componente de dispositivos electrónicos"
+    },
+    "74": {
+        "nombre": "Wolframio",
+        "simbolo": "W",
+        "numero_atomico": 74,
+        "masa_atomica": 183.84,
+        "electronegatividad": 2.36,
+        "categoria": "Metal de transición",
+        "info_adicional": "Filamentos de bombillas incandescentes"
+    },
+    "75": {
+        "nombre": "Renio",
+        "simbolo": "Re",
+        "numero_atomico": 75,
+        "masa_atomica": 186.21,
+        "electronegatividad": 1.90,
+        "categoria": "Metal de transición",
+        "info_adicional": "Catalizador en refinación de petróleo"
+    },
+    "76": {
+        "nombre": "Osmio",
+        "simbolo": "Os",
+        "numero_atomico": 76,
+        "masa_atomica": 190.23,
+        "electronegatividad": 2.20,
+        "categoria": "Metal de transición",
+        "info_adicional": "Metal más denso conocido"
+    },
+    "77": {
+        "nombre": "Iridio",
+        "simbolo": "Ir",
+        "numero_atomico": 77,
+        "masa_atomica": 192.22,
+        "electronegatividad": 2.20,
+        "categoria": "Metal de transición",
+        "info_adicional": "Resistente a la corrosión, usado en puntas de bolígrafos"
+    },
+    "78": {
+        "nombre": "Platino",
+        "simbolo": "Pt",
+        "numero_atomico": 78,
+        "masa_atomica": 195.08,
+        "electronegatividad": 2.28,
+        "categoria": "Metal de transición",
+        "info_adicional": "Catalizador en vehículos y joyería de lujo"
+    },
+    "79": {
+        "nombre": "Oro",
+        "simbolo": "Au",
+        "numero_atomico": 79,
+        "masa_atomica": 196.97,
+        "electronegatividad": 2.54,
+        "categoria": "Metal de transición",
+        "info_adicional": "Símbolo de riqueza, usado en electrónica"
+    },
+    "80": {
+        "nombre": "Mercurio",
+        "simbolo": "Hg",
+        "numero_atomico": 80,
+        "masa_atomica": 200.59,
+        "electronegatividad": 2.00,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Único metal líquido a temperatura ambiente"
+    },
+    "81": {
+        "nombre": "Talio",
+        "simbolo": "Tl",
+        "numero_atomico": 81,
+        "masa_atomica": 204.38,
+        "electronegatividad": 1.62,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Tóxico, usado en venenos y detectores infrarrojos"
+    },
+    "82": {
+        "nombre": "Plomo",
+        "simbolo": "Pb",
+        "numero_atomico": 82,
+        "masa_atomica": 207.2,
+        "electronegatividad": 2.33,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Usado en baterías y antiguas tuberías"
+    },
+    "83": {
+        "nombre": "Bismuto",
+        "simbolo": "Bi",
+        "numero_atomico": 83,
+        "masa_atomica": 208.98,
+        "electronegatividad": 2.02,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Menos tóxico entre los metales pesados"
+    },
+    "84": {
+        "nombre": "Polonio",
+        "simbolo": "Po",
+        "numero_atomico": 84,
+        "masa_atomica": 209,
+        "electronegatividad": 2.00,
+        "categoria": "Metaloide",
+        "info_adicional": "Elemento radiactivo descubierto por Marie Curie"
+    },
+    "85": {
+        "nombre": "Ástato",
+        "simbolo": "At",
+        "numero_atomico": 85,
+        "masa_atomica": 210,
+        "electronegatividad": 2.20,
+        "categoria": "Halógeno",
+        "info_adicional": "Elemento más raro en la naturaleza"
+    },
+    "86": {
+        "nombre": "Radón",
+        "simbolo": "Rn",
+        "numero_atomico": 86,
+        "masa_atomica": 222,
+        "electronegatividad": 0.0,
+        "categoria": "Gas noble",
+        "info_adicional": "Radiactivo, riesgo de cáncer pulmonar"
+    },
+    "87": {
+        "nombre": "Francio",
+        "simbolo": "Fr",
+        "numero_atomico": 87,
+        "masa_atomica": 223,
+        "electronegatividad": 0.70,
+        "categoria": "Metal alcalino",
+        "info_adicional": "Elemento natural más inestable"
+    },
+    "88": {
+        "nombre": "Radio",
+        "simbolo": "Ra",
+        "numero_atomico": 88,
+        "masa_atomica": 226,
+        "electronegatividad": 0.90,
+        "categoria": "Metal alcalinotérreo",
+        "info_adicional": "Usado en pinturas luminiscentes (radiactivo)"
+    },
+    "89": {
+        "nombre": "Actinio",
+        "simbolo": "Ac",
+        "numero_atomico": 89,
+        "masa_atomica": 227,
+        "electronegatividad": 1.10,
+        "categoria": "Actínido",
+        "info_adicional": "Usado en generadores termoeléctricos"
+    },
+    "90": {
+        "nombre": "Torio",
+        "simbolo": "Th",
+        "numero_atomico": 90,
+        "masa_atomica": 232.04,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Potencial combustible nuclear"
+    },
+    "91": {
+        "nombre": "Protactinio",
+        "simbolo": "Pa",
+        "numero_atomico": 91,
+        "masa_atomica": 231.04,
+        "electronegatividad": 1.50,
+        "categoria": "Actínido",
+        "info_adicional": "Extremadamente raro y radiactivo"
+    },
+    "92": {
+        "nombre": "Uranio",
+        "simbolo": "U",
+        "numero_atomico": 92,
+        "masa_atomica": 238.03,
+        "electronegatividad": 1.38,
+        "categoria": "Actínido",
+        "info_adicional": "Combustible principal de reactores nucleares"
+    },
+    "93": {
+        "nombre": "Neptunio",
+        "simbolo": "Np",
+        "numero_atomico": 93,
+        "masa_atomica": 237,
+        "electronegatividad": 1.36,
+        "categoria": "Actínido",
+        "info_adicional": "Primer elemento sintético transuránico"
+    },
+    "94": {
+        "nombre": "Plutonio",
+        "simbolo": "Pu",
+        "numero_atomico": 94,
+        "masa_atomica": 244,
+        "electronegatividad": 1.28,
+        "categoria": "Actínido",
+        "info_adicional": "Usado en armas nucleares y reactores"
+    },
+    "95": {
+        "nombre": "Americio",
+        "simbolo": "Am",
+        "numero_atomico": 95,
+        "masa_atomica": 243,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Componente de detectores de humo"
+    },
+    "96": {
+        "nombre": "Curio",
+        "simbolo": "Cm",
+        "numero_atomico": 96,
+        "masa_atomica": 247,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Producido en reactores nucleares"
+    },
+    "97": {
+        "nombre": "Berkelio",
+        "simbolo": "Bk",
+        "numero_atomico": 97,
+        "masa_atomica": 247,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Sintetizado en laboratorios, sin usos prácticos"
+    },
+    "98": {
+        "nombre": "Californio",
+        "simbolo": "Cf",
+        "numero_atomico": 98,
+        "masa_atomica": 251,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Usado en reactores nucleares portátiles"
+    },
+    "99": {
+        "nombre": "Einstenio",
+        "simbolo": "Es",
+        "numero_atomico": 99,
+        "masa_atomica": 252,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Producido en explosiones nucleares"
+    },
+    "100": {
+        "nombre": "Fermio",
+        "simbolo": "Fm",
+        "numero_atomico": 100,
+        "masa_atomica": 257,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Descubierto en restos de una bomba de hidrógeno"
+    },
+    "101": {
+        "nombre": "Mendelevio",
+        "simbolo": "Md",
+        "numero_atomico": 101,
+        "masa_atomica": 258,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Elemento sintético altamente radiactivo"
+    },
+    "102": {
+        "nombre": "Nobelio",
+        "simbolo": "No",
+        "numero_atomico": 102,
+        "masa_atomica": 259,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Sintetizado por bombardeo de partículas"
+    },
+    "103": {
+        "nombre": "Laurencio",
+        "simbolo": "Lr",
+        "numero_atomico": 103,
+        "masa_atomica": 262,
+        "electronegatividad": 1.30,
+        "categoria": "Actínido",
+        "info_adicional": "Último elemento de la serie actínida"
+    },
+    "104": {
+        "nombre": "Rutherfordio",
+        "simbolo": "Rf",
+        "numero_atomico": 104,
+        "masa_atomica": 267,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Sintético, propiedades similares al hafnio"
+    },
+    "105": {
+        "nombre": "Dubnio",
+        "simbolo": "Db",
+        "numero_atomico": 105,
+        "masa_atomica": 268,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Elemento altamente inestable"
+    },
+    "106": {
+        "nombre": "Seaborgio",
+        "simbolo": "Sg",
+        "numero_atomico": 106,
+        "masa_atomica": 271,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Nombrado en honor a Glenn T. Seaborg"
+    },
+    "107": {
+        "nombre": "Bohrio",
+        "simbolo": "Bh",
+        "numero_atomico": 107,
+        "masa_atomica": 272,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Sintético, propiedades químicas desconocidas"
+    },
+    "108": {
+        "nombre": "Hassio",
+        "simbolo": "Hs",
+        "numero_atomico": 108,
+        "masa_atomica": 270,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Producido en aceleradores de partículas"
+    },
+    "109": {
+        "nombre": "Meitnerio",
+        "simbolo": "Mt",
+        "numero_atomico": 109,
+        "masa_atomica": 276,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Nombrado en honor a Lise Meitner"
+    },
+    "110": {
+        "nombre": "Darmstatio",
+        "simbolo": "Ds",
+        "numero_atomico": 110,
+        "masa_atomica": 281,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Sintético, vida media de segundos"
+    },
+    "111": {
+        "nombre": "Roentgenio",
+        "simbolo": "Rg",
+        "numero_atomico": 111,
+        "masa_atomica": 280,
+        "electronegatividad": 1.30,
+        "categoria": "Metal de transición",
+        "info_adicional": "Nombrado en honor a Wilhelm Röntgen"
+    },
+    "112": {
+        "nombre": "Copernicio",
+        "simbolo": "Cn",
+        "numero_atomico": 112,
+        "masa_atomica": 285,
+        "electronegatividad": 1.30,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Posiblemente líquido a temperatura ambiente"
+    },
+    "113": {
+        "nombre": "Nihonio",
+        "simbolo": "Nh",
+        "numero_atomico": 113,
+        "masa_atomica": 286,
+        "electronegatividad": 1.30,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Primer elemento descubierto en Asia (Japón)"
+    },
+    "114": {
+        "nombre": "Flerovio",
+        "simbolo": "Fl",
+        "numero_atomico": 114,
+        "masa_atomica": 289,
+        "electronegatividad": 1.30,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Posiblemente gas noble metálico"
+    },
+    "115": {
+        "nombre": "Moscovio",
+        "simbolo": "Mc",
+        "numero_atomico": 115,
+        "masa_atomica": 290,
+        "electronegatividad": 1.30,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Nombrado en honor a Moscú"
+    },
+    "116": {
+        "nombre": "Livermorio",
+        "simbolo": "Lv",
+        "numero_atomico": 116,
+        "masa_atomica": 293,
+        "electronegatividad": 1.30,
+        "categoria": "Metal post-transición",
+        "info_adicional": "Sintético, altamente radiactivo"
+    },
+    "117": {
+        "nombre": "Teneso",
+        "simbolo": "Ts",
+        "numero_atomico": 117,
+        "masa_atomica": 294,
+        "electronegatividad": 1.30,
+        "categoria": "Halógeno",
+        "info_adicional": "Elemento sintético del grupo del yodo"
+    },
+    "118": {
+        "nombre": "Oganessón",
+        "simbolo": "Og",
+        "numero_atomico": 118,
+        "masa_atomica": 294,
+        "electronegatividad": 0.0,
+        "categoria": "Gas noble",
+        "info_adicional": "Elemento más pesado conocido, altamente inestable"
+
+            }
+        };
+
+        // Sistema de IA simplificado
+        class HelionixAI {
+            predict(numeroAtomico, masaAtomica, electronegatividad) {
+                if (electronegatividad === 0.0) return "Gas noble";
+                if (numeroAtomico >= 57 && numeroAtomico <= 71) return "Lantánido";
+                if (numeroAtomico >= 89 && numeroAtomico <= 103) return "Actínido";
+                if (electronegatividad > 2.5) return "No metal";
+                if (electronegatividad < 1.2 && numeroAtomico < 20) return "Metal alcalino";
+                if (numeroAtomico >= 21 && numeroAtomico <= 30) return "Metal de transición";
+                if (electronegatividad > 1.8 && electronegatividad < 2.2) return "Metaloide";
+                if (numeroAtomico > 80) return "Metal post-transición";
+                return "Metal de transición";
+            }
+        }
+
+        const ai = new HelionixAI();
+        let qrScanner = null;
+        let currentAudio = null;
+
+        // Event listeners
+        document.getElementById('scanBtn').addEventListener('click', toggleScanner);
+        document.getElementById('manualBtn').addEventListener('click', toggleManualInput);
+        document.getElementById('periodicBtn').addEventListener('click', togglePeriodicTable);
+        document.getElementById('searchBtn').addEventListener('click', searchElement);
+        document.getElementById('playAudioBtn').addEventListener('click', playElementAudio);
+        document.getElementById('startScanBtn').addEventListener('click', startScanner);
+        document.getElementById('stopScanBtn').addEventListener('click', stopScanner);
+
+        document.getElementById('elementNumber').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchElement();
+            }
+        });
+
+        function toggleScanner() {
+            const container = document.getElementById('scannerContainer');
+            const btn = document.getElementById('scanBtn');
+            
+            if (container.classList.contains('active')) {
+                container.classList.remove('active');
+                btn.classList.remove('active');
+                stopScanner();
+            } else {
+                hideAllContainers();
+                container.classList.add('active');
+                btn.classList.add('active');
+                generateSampleQRs();
+            }
+        }
+
+        function generateSampleQRs() {
+            const qrGrid = document.getElementById('qrCodesGrid');
+            qrGrid.innerHTML = '';
+            
+            // Generar QRs para elementos disponibles
+            Object.keys(elementos).forEach(elementId => {
+                const element = elementos[elementId];
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-code-item';
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = 80;
+                canvas.height = 80;
+                
+                const qr = new QRious({
+                    element: canvas,
+                    value: elementId,
+                    size: 80,
+                    foreground: '#10B981',
+                    background: '#FFFFFF'
+                });
+                
+                const label = document.createElement('div');
+                label.className = 'label';
+                label.textContent = `${element.simbolo} (${elementId})`;
+                
+                qrItem.appendChild(canvas);
+                qrItem.appendChild(label);
+                qrGrid.appendChild(qrItem);
+            });
+        }
+
+        function toggleManualInput() {
+            const container = document.getElementById('manualInput');
+            const btn = document.getElementById('manualBtn');
+            
+            if (container.classList.contains('active')) {
+                container.classList.remove('active');
+                btn.classList.remove('active');
+            } else {
+                hideAllContainers();
+                container.classList.add('active');
+                btn.classList.add('active');
+            }
+        }
+
+        function togglePeriodicTable() {
+            const table = document.getElementById('periodicTable');
+            const btn = document.getElementById('periodicBtn');
+            
+            if (table.style.display === 'grid') {
+                table.style.display = 'none';
+                btn.classList.remove('active');
+            } else {
+                hideAllContainers();
+                createPeriodicTable();
+                table.style.display = 'grid';
+                btn.classList.add('active');
+            }
+        }
+
+        function hideAllContainers() {
+            document.getElementById('scannerContainer').classList.remove('active');
+            document.getElementById('manualInput').classList.remove('active');
+            document.getElementById('periodicTable').style.display = 'none';
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            stopScanner();
+        }
+
+        async function startScanner() {
+            try {
+                const video = document.getElementById('video');
+                const status = document.getElementById('scanStatus');
+                const startBtn = document.getElementById('startScanBtn');
+                const stopBtn = document.getElementById('stopScanBtn');
+                
+                status.textContent = "Solicitando acceso a la cámara...";
+                status.className = "status";
+                
+                // Verificar si QrScanner está disponible
+                if (typeof QrScanner === 'undefined') {
+                    throw new Error('QrScanner no está cargado');
+                }
+                
+                // Verificar compatibilidad del navegador
+                const hasCamera = await QrScanner.hasCamera();
+                if (!hasCamera) {
+                    throw new Error('No se detectó cámara en el dispositivo');
+                }
+                
+                qrScanner = new QrScanner(
+                    video,
+                    result => {
+                        const elementId = parseInt(result.data);
+                        console.log('QR detectado:', result.data);
+                        
+                        if (elementos[elementId]) {
+                            processElement(elementId);
+                            status.textContent = `✅ Elemento ${elementId} (${elementos[elementId].nombre}) detectado`;
+                            status.className = "status success";
+                            
+                            // Feedback visual/sonoro
+                            video.style.borderColor = 'var(--primary-green)';
+                            setTimeout(() => {
+                                video.style.borderColor = 'var(--gray-200)';
+                            }, 1000);
+                            
+                        } else {
+                            status.textContent = `❌ Código QR "${result.data}" no corresponde a un elemento disponible`;
+                            status.className = "status error";
+                        }
+                    },
+                    {
+                        onDecodeError: error => {
+                            // Solo mostrar errores importantes
+                            if (error.message && !error.message.includes('No QR code found')) {
+                                console.warn('Error de decodificación:', error);
+                            }
+                        },
+                        highlightScanRegion: true,
+                        highlightCodeOutline: true,
+                        maxScansPerSecond: 5,
+                        preferredCamera: 'environment' // Cámara trasera en móviles
+                    }
+                );
+
+                await qrScanner.start();
+                
+                status.textContent = "🎯 Cámara activa - Apunte hacia un código QR";
+                status.className = "status success";
+                
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-flex';
+                
+            } catch (error) {
+                console.error('Error del escáner:', error);
+                const status = document.getElementById('scanStatus');
+                
+                if (error.name === 'NotAllowedError') {
+                    status.textContent = "❌ Acceso a la cámara denegado. Permita el acceso en la configuración del navegador";
+                } else if (error.name === 'NotFoundError') {
+                    status.textContent = "❌ No se encontró cámara en el dispositivo";
+                } else if (error.name === 'NotSupportedError') {
+                    status.textContent = "❌ Cámara no compatible con este navegador";
+                } else {
+                    status.textContent = `❌ Error: ${error.message}`;
+                }
+                
+                status.className = "status error";
+            }
+        }
+
+        function stopScanner() {
+            const startBtn = document.getElementById('startScanBtn');
+            const stopBtn = document.getElementById('stopScanBtn');
+            const status = document.getElementById('scanStatus');
+            
+            if (qrScanner) {
+                qrScanner.stop();
+                qrScanner.destroy();
+                qrScanner = null;
+            }
+            
+            status.textContent = "📷 Cámara desactivada";
+            status.className = "status";
+            
+            startBtn.style.display = 'inline-flex';
+            stopBtn.style.display = 'none';
+        }
+
+        function searchElement() {
+            const elementNumber = parseInt(document.getElementById('elementNumber').value);
+            const status = document.getElementById('manualStatus');
+            
+            if (elementNumber >= 1 && elementNumber <= 118) {
+                if (elementos[elementNumber]) {
+                    processElement(elementNumber);
+                    status.textContent = `Análisis completado para elemento ${elementNumber}`;
+                    status.className = "status success";
+                } else {
+                    status.textContent = `Elemento ${elementNumber} no disponible en base de datos`;
+                    status.className = "status error";
+                }
+            } else {
+                status.textContent = "Rango válido: 1-118";
+                status.className = "status error";
+            }
+        }
+
+        function createPeriodicTable() {
+            const table = document.getElementById('periodicTable');
+            table.innerHTML = '';
+            
+            Object.keys(elementos).forEach(elementId => {
+                const element = elementos[elementId];
+                const cell = document.createElement('div');
+                cell.className = 'element-cell';
+                cell.innerHTML = `
+                    <div class="number">${element.numero_atomico}</div>
+                    <div class="symbol">${element.simbolo}</div>
+                `;
+                cell.addEventListener('click', () => processElement(parseInt(elementId)));
+                table.appendChild(cell);
+            });
+        }
+
+        function processElement(elementId) {
+            const element = elementos[elementId];
+            if (!element) return;
+
+            const aiPrediction = ai.predict(
+                element.numero_atomico,
+                element.masa_atomica,
+                element.electronegatividad
+            );
+
+            document.getElementById('elementSymbol').textContent = element.simbolo;
+            document.getElementById('elementName').textContent = element.nombre;
+            document.getElementById('elementAtomicNumber').textContent = `Z = ${element.numero_atomico}`;
+            document.getElementById('elementMass').textContent = `${element.masa_atomica} u`;
+            document.getElementById('elementElectronegativity').textContent = element.electronegatividad;
+            document.getElementById('elementCategory').textContent = element.categoria;
+            document.getElementById('aiCategory').textContent = aiPrediction;
+            document.getElementById('elementAdditionalInfo').textContent = element.info_adicional;
+
+            document.getElementById('elementInfo').classList.add('active');
+        }
+
+        function playElementAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+
+            const elementName = document.getElementById('elementName').textContent;
+            const elementSymbol = document.getElementById('elementSymbol').textContent;
+            const atomicNumber = document.getElementById('elementAtomicNumber').textContent;
+            const category = document.getElementById('elementCategory').textContent;
+            const additionalInfo = document.getElementById('elementAdditionalInfo').textContent;
+
+            const text = `Análisis Helionix: Elemento ${elementName}, símbolo ${elementSymbol}, ${atomicNumber}, clasificación ${category}. ${additionalInfo}`;
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Síntesis de voz no disponible. Contenido: ' + text);
+            }
+        }
+
+        window.addEventListener('beforeunload', function() {
+            stopScanner();
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+        });
+
+        window.addEventListener('load', function() {
+            console.log('Helionix - Sistema iniciado');
+            console.log(`Base de datos: ${Object.keys(elementos).length} elementos`);
+        });
+    </script>
+</body>
 </html>
