@@ -315,43 +315,6 @@
             border-top: 1px solid var(--gray-200);
         }
 
-        .manual-input {
-            display: none;
-        }
-
-        .manual-input.active {
-            display: block;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .input-group input {
-            padding: 12px 16px;
-            border: 2px solid var(--gray-200);
-            border-radius: 8px;
-            background: var(--white);
-            color: var(--gray-800);
-            width: 200px;
-            text-align: center;
-            font-size: 16px;
-            transition: border-color 0.2s ease;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--primary-green);
-        }
-
-        .input-group input::placeholder {
-            color: var(--gray-600);
-        }
-
         .status {
             text-align: center;
             margin-top: 16px;
@@ -483,12 +446,6 @@
                 </svg>
                 Escanear QR
             </button>
-            <button class="btn" id="manualBtn">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                Búsqueda Manual
-            </button>
             <button class="btn" id="periodicBtn">
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -521,29 +478,8 @@
             
             <video id="video"></video>
             <div class="status" id="scanStatus">Presione "Iniciar Cámara" para comenzar</div>
-
-                        <div class="qr-generator">
-                <h4>Códigos QR de Ejemplo</h4>
-                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px;">
-                    Escanee estos códigos QR para probar la funcionalidad:
-                </p>
-                <div class="qr-codes-grid" id="qrCodesGrid"></div>
-            </div>
         </div>
             
-
-        <div class="manual-input card" id="manualInput">
-            <div class="input-group">
-                <input type="number" id="elementNumber" placeholder="Número atómico (1-118)" min="1" max="118">
-                <button class="btn" id="searchBtn">
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    Analizar
-                </button>
-            </div>
-            <div class="status" id="manualStatus"></div>
-        </div>
 
         <div class="periodic-table" id="periodicTable" style="display: none;"></div>
 
@@ -1687,18 +1623,10 @@
 
         // Event listeners
         document.getElementById('scanBtn').addEventListener('click', toggleScanner);
-        document.getElementById('manualBtn').addEventListener('click', toggleManualInput);
         document.getElementById('periodicBtn').addEventListener('click', togglePeriodicTable);
-        document.getElementById('searchBtn').addEventListener('click', searchElement);
         document.getElementById('playAudioBtn').addEventListener('click', playElementAudio);
         document.getElementById('startScanBtn').addEventListener('click', startScanner);
         document.getElementById('stopScanBtn').addEventListener('click', stopScanner);
-
-        document.getElementById('elementNumber').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchElement();
-            }
-        });
 
         function toggleScanner() {
             const container = document.getElementById('scannerContainer');
@@ -1708,53 +1636,6 @@
                 container.classList.remove('active');
                 btn.classList.remove('active');
                 stopScanner();
-            } else {
-                hideAllContainers();
-                container.classList.add('active');
-                btn.classList.add('active');
-                generateSampleQRs();
-            }
-        }
-
-        function generateSampleQRs() {
-            const qrGrid = document.getElementById('qrCodesGrid');
-            qrGrid.innerHTML = '';
-            
-            // Generar QRs para elementos disponibles
-            Object.keys(elementos).forEach(elementId => {
-                const element = elementos[elementId];
-                const qrItem = document.createElement('div');
-                qrItem.className = 'qr-code-item';
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = 80;
-                canvas.height = 80;
-                
-                const qr = new QRious({
-                    element: canvas,
-                    value: elementId,
-                    size: 80,
-                    foreground: '#10B981',
-                    background: '#FFFFFF'
-                });
-                
-                const label = document.createElement('div');
-                label.className = 'label';
-                label.textContent = `${element.simbolo} (${elementId})`;
-                
-                qrItem.appendChild(canvas);
-                qrItem.appendChild(label);
-                qrGrid.appendChild(qrItem);
-            });
-        }
-
-        function toggleManualInput() {
-            const container = document.getElementById('manualInput');
-            const btn = document.getElementById('manualBtn');
-            
-            if (container.classList.contains('active')) {
-                container.classList.remove('active');
-                btn.classList.remove('active');
             } else {
                 hideAllContainers();
                 container.classList.add('active');
@@ -1779,7 +1660,6 @@
 
         function hideAllContainers() {
             document.getElementById('scannerContainer').classList.remove('active');
-            document.getElementById('manualInput').classList.remove('active');
             document.getElementById('periodicTable').style.display = 'none';
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
             stopScanner();
@@ -1886,23 +1766,26 @@
             stopBtn.style.display = 'none';
         }
 
-        function searchElement() {
-            const elementNumber = parseInt(document.getElementById('elementNumber').value);
-            const status = document.getElementById('manualStatus');
+        function togglePeriodicTable() {
+            const table = document.getElementById('periodicTable');
+            const btn = document.getElementById('periodicBtn');
             
-            if (elementNumber >= 1 && elementNumber <= 118) {
-                if (elementos[elementNumber]) {
-                    processElement(elementNumber);
-                    status.textContent = `Análisis completado para elemento ${elementNumber}`;
-                    status.className = "status success";
-                } else {
-                    status.textContent = `Elemento ${elementNumber} no disponible en base de datos`;
-                    status.className = "status error";
-                }
+            if (table.style.display === 'grid') {
+                table.style.display = 'none';
+                btn.classList.remove('active');
             } else {
-                status.textContent = "Rango válido: 1-118";
-                status.className = "status error";
+                hideAllContainers();
+                createPeriodicTable();
+                table.style.display = 'grid';
+                btn.classList.add('active');
             }
+        }
+
+        function hideAllContainers() {
+            document.getElementById('scannerContainer').classList.remove('active');
+            document.getElementById('periodicTable').style.display = 'none';
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            stopScanner();
         }
 
         function createPeriodicTable() {
