@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helionix - Tabla Periódica Interactiva</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Helionix</h1>
+            <p class="subtitle">Plataforma avanzada de análisis químico con inteligencia artificial para el estudio interactivo de elementos</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="scanBtn">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M12 12h4.01M12 12v4.01"></path>
+                </svg>
+                Escanear QR
+            </button>
+            <button class="btn" id="periodicBtn">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Tabla Periódica
+            </button>
+        </div>
+
+        <div class="scanner-container card" id="scannerContainer">
+            <div class="scanner-header">
+                <h3>Escáner QR Avanzado</h3>
+                <p>Apunte la cámara hacia un código QR de elemento químico</p>
+            </div>
+            
+            <div class="scanner-controls">
+                <button class="btn" id="startScanBtn">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Iniciar Cámara
+                </button>
+                <button class="btn" id="stopScanBtn" style="display: none;">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+                    </svg>
+                    Detener
+                </button>
+            </div>
+            
+            <video id="video"></video>
+            <div class="status" id="scanStatus">Presione "Iniciar Cámara" para comenzar</div>
+        </div>
+            
+
+        <div class="periodic-table" id="periodicTable" style="display: none;"></div>
+
+        <div class="element-info card" id="elementInfo">
+            <div class="element-header">
+                <div class="element-symbol" id="elementSymbol"></div>
+                <div class="element-basic">
+                    <div class="element-name" id="elementName"></div>
+                    <div class="element-number" id="elementAtomicNumber"></div>
+                </div>
+            </div>
+
+            <div class="ai-prediction">
+                <div class="label">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    Análisis IA - Clasificación Predictiva - Modelo aun en entrenamiento
+                </div>
+                <div class="content" id="aiCategory"></div>
+            </div>
+
+            <div class="element-details">
+                <div class="detail-item">
+                    <div class="detail-label">Masa Atómica</div>
+                    <div class="detail-value" id="elementMass"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Electronegatividad</div>
+                    <div class="detail-value" id="elementElectronegativity"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Clasificación</div>
+                    <div class="detail-value" id="elementCategory"></div>
+                </div>
+            </div>
+            
+            <!-- Nueva sección para propiedades físicas y químicas -->
+            <div class="properties-section">
+                <h3>
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                    Propiedades Físicas y Químicas
+                </h3>
+                <div class="properties-grid" id="physicalProperties"></div>
+            </div>
+
+            <div class="info-adicional">
+                <div class="label">Información Técnica</div>
+                <div id="elementAdditionalInfo"></div>
+            </div>
+
+            <div class="audio-controls">
+                <button class="btn" id="playAudioBtn">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M9 12a3 3 0 106 0v5a3 3 0 11-6 0v-5z"></path>
+                    </svg>
+                    Síntesis de Voz
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
